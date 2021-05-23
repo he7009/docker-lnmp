@@ -1,0 +1,95 @@
+version: "3"
+services:
+  nginx:
+    build:
+      context: ./services/nginx
+    container_name: nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./www:/www
+      - ./services/nginx/conf:/etc/nginx
+      - ./logs/nginx:/var/log/nginx
+    restart: always
+    depends_on:
+      - php56
+      - php74
+    environment:
+      TZ: "Asia/Shanghai"
+
+  php56:
+    build:
+      context: ./services/php56
+    container_name: php56
+    volumes:
+      - ./www:/www
+      - ./services/php56/etc/php/php.ini:/usr/local/etc/php/php.ini
+      - ./services/php56/etc/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - ./services/php56/etc/php-fpm.d:/usr/local/etc/php-fpm.d
+      - ./logs/php56:/var/log/php
+    restart: always
+    depends_on:
+      - mysql57
+      - redis
+      - memcached
+    environment:
+      TZ: "Asia/Shanghai"
+
+  php74:
+    build:
+      context: ./services/php74
+    container_name: php74
+    volumes:
+      - ./www:/www
+      - ./services/php74/etc/php/php.ini:/usr/local/etc/php/php.ini
+      - ./services/php74/etc/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - ./services/php74/etc/php-fpm.d:/usr/local/etc/php-fpm.d
+      - ./logs/php74:/var/log/php
+    restart: always
+    depends_on:
+      - mysql57
+      - redis
+      - memcached
+    environment:
+      TZ: "Asia/Shanghai"
+
+  mysql57:
+    container_name: mysql57
+    build:
+      context: ./services/mysql
+      args:
+        - MYSQL_VER=5.7
+    ports:
+      - 3306:3306
+    volumes:
+      - ./services/mysql/conf:/etc/mysql
+      - ./data/mysql:/var/lib/mysql
+      - ./logs/mysql:/var/log/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    restart: always
+
+  redis:
+    build:
+      context: ./services/redis
+    container_name: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - ./services/redis/conf/redis.conf:/etc/redis.conf
+      - ./data/redis:/data
+      - ./logs/redis:/var/log/redis
+    environment:
+      TZ: "Asia/Shanghai"
+    entrypoint: [ "redis-server", "/etc/redis.conf" ]
+
+  memcached:
+    build:
+      context: ./services/memcached
+    container_name: memcached
+    ports:
+      - "11211:11211"
+    environment:
+      TZ: "Asia/Shanghai"
+    restart: always
